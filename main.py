@@ -1,38 +1,42 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
 
-app = FastAPI(title="Student Performance Predictor API")
-
 # Load models and scaler
 logistic_model = joblib.load("logistic_model.joblib")
-decision_tree_model = joblib.load("decision_tree_model.joblib")
+tree_model = joblib.load("decision_tree_model.joblib")
 scaler = joblib.load("scaler.joblib")
 
-# Request body schema
-class Features(BaseModel):
-    feature1: float
-    feature2: float
-    feature3: float
-    feature4: float
+app = FastAPI()
 
-# Logistic Regression prediction endpoint
+# Add CORS so your frontend can access the backend
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # allow all origins
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Request schema
+class StudentData(BaseModel):
+    study_hours: float
+    attendance: float
+
+# Logistic regression endpoint
 @app.post("/predict/logistic")
-def predict_logistic(data: Features):
-    X = np.array([[data.feature1, data.feature2, data.feature3, data.feature4]])
-    X_scaled = scaler.transform(X)
-    prediction = logistic_model.predict(X_scaled)
+def predict_logistic(data: StudentData):
+    features = np.array([[data.study_hours, data.attendance]])
+    features_scaled = scaler.transform(features)
+    prediction = logistic_model.predict(features_scaled)
     return {"prediction": int(prediction[0])}
 
-# Decision Tree prediction endpoint
+# Decision tree endpoint
 @app.post("/predict/tree")
-def predict_tree(data: Features):
-    X = np.array([[data.feature1, data.feature2, data.feature3, data.feature4]])
-    prediction = decision_tree_model.predict(X)
+def predict_tree(data: StudentData):
+    features = np.array([[data.study_hours, data.attendance]])
+    features_scaled = scaler.transform(features)
+    prediction = tree_model.predict(features_scaled)
     return {"prediction": int(prediction[0])}
-
-# Root endpoint
-@app.get("/")
-def root():
-    return {"message": "Student Performance Predictor API is running"}
