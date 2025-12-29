@@ -1,13 +1,6 @@
-<<<<<<< HEAD
-fastapi
-uvicorn
-joblib
-numpy
-scikit-learn
-=======
-fastapi
-uvicorn
-joblib
-numpy
-scikit-learn
->>>>>>> d1ed9896baceac2ba1259ed99210ee0dffa1e931
+fastapi==0.128.0
+uvicorn==0.40.0
+joblib==1.5.3
+numpy==2.4.0
+scikit-learn==1.8.0
+pydantic==2.12.5

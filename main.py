@@ -1,86 +1,38 @@
-<<<<<<< HEAD
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import joblib
 import numpy as np
 
-app = FastAPI()
+app = FastAPI(title="Student Performance Predictor API")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Load trained models
+# Load models and scaler
 logistic_model = joblib.load("logistic_model.joblib")
 decision_tree_model = joblib.load("decision_tree_model.joblib")
 scaler = joblib.load("scaler.joblib")
 
-# MODEL EXPECTS ONLY 2 FEATURES
-class InputData(BaseModel):
+# Request body schema
+class Features(BaseModel):
     feature1: float
     feature2: float
+    feature3: float
+    feature4: float
 
+# Logistic Regression prediction endpoint
 @app.post("/predict/logistic")
-def predict_logistic(data: InputData):
-    X = np.array([[data.feature1, data.feature2]])
+def predict_logistic(data: Features):
+    X = np.array([[data.feature1, data.feature2, data.feature3, data.feature4]])
     X_scaled = scaler.transform(X)
     prediction = logistic_model.predict(X_scaled)
-    return {
-        "model": "logistic_regression",
-        "prediction": int(prediction[0])
-    }
+    return {"prediction": int(prediction[0])}
 
+# Decision Tree prediction endpoint
 @app.post("/predict/tree")
-def predict_tree(data: InputData):
-    X = np.array([[data.feature1, data.feature2]])
-    X_scaled = scaler.transform(X)
-    prediction = decision_tree_model.predict(X_scaled)
-    return {
-        "model": "decision_tree",
-        "prediction": int(prediction[0])
-    }
+def predict_tree(data: Features):
+    X = np.array([[data.feature1, data.feature2, data.feature3, data.feature4]])
+    prediction = decision_tree_model.predict(X)
+    return {"prediction": int(prediction[0])}
 
+# Root endpoint
 @app.get("/")
 def root():
-    return {"message": "API is working"}
-=======
-from fastapi import FastAPI
-from pydantic import BaseModel
-import joblib
-import numpy as np
-
-# Initialize FastAPI
-app = FastAPI(title="Student Performance ML API")
-
-# Load models
-logistic_model = joblib.load("logistic_model.joblib")
-decision_tree_model = joblib.load("decision_tree_model.joblib")
-scaler = joblib.load("scaler.joblib")
-
-# Input schema
-class StudentInput(BaseModel):
-    study_hours: float
-    attendance: float
-
-@app.get("/")
-def home():
-    return {"message": "Student Performance ML API is running"}
-
-@app.post("/predict/logistic")
-def predict_logistic(data: StudentInput):
-    features = np.array([[data.study_hours, data.attendance]])
-    features_scaled = scaler.transform(features)
-    prediction = logistic_model.predict(features)
-    return {"prediction": int(prediction[0])}
-
-@app.post("/predict/decision-tree")
-def predict_decision_tree(data: StudentInput):
-    features = np.array([[data.study_hours, data.attendance]])
-    prediction = decision_tree_model.predict(features)
-    return {"prediction": int(prediction[0])}
->>>>>>> d1ed9896baceac2ba1259ed99210ee0dffa1e931
+    return {"message": "Student Performance Predictor API is running"}
